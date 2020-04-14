@@ -13,14 +13,16 @@ import android.view.SurfaceView;
 import java.util.ArrayList;
 import java.util.Random;
 
+import static java.lang.Thread.sleep;
+
 public class TestSurfaceView extends SurfaceView implements SurfaceHolder.Callback2 {
     SurfaceHolder holder;
     DrawThread thread;
-    int number = 2, backColor = Color.BLACK, colors_number = 7;
+    int number = 3, backColor = Color.BLACK, colors_number = 7, over_circles = 1;
     float rad = 50;
     int width, height;
     Rect rect;
-    boolean visit = false;
+    boolean visit = false, over = false;
 
     ArrayList<Circle> circles = new ArrayList<>();
 
@@ -58,61 +60,97 @@ public class TestSurfaceView extends SurfaceView implements SurfaceHolder.Callba
         @Override
         public void run() {
             super.run();
-            while (runflag) {
-//                try {
-//                    sleep(10);
-//                } catch (InterruptedException e) {}
+            while (runflag && !over) {
 
                 Canvas c = holder.lockCanvas();
                 if (c != null) {
                     c.drawColor(backColor);
-                    Paint p = new Paint();
+
+
                     for (int i = 0; i < number; i++) {
                         circles.get(i).draw(c);
                     }
                     rect.draw(c);
 
+                    for (int i = 0; i < number - 1; i++) {
+                        if (circles.get(i).color == circles.get(i + 1).color) {
+                            over_circles++;
+                        } else {
+                            over_circles = 1;
+                            break;
+                        }
+                    }
+
+
+                    if (over_circles == number) {
+                        over = true;
+                    }
+
+
                     holder.unlockCanvasAndPost(c);
 
-                    for (int i = 0; i < circles.size(); i++) {
-                        circles.get(i).changeDirection(width, height);
-                        for (int j = i; j < circles.size(); j++) {
-                            float rast = (float)Math.sqrt((circles.get(i).x - circles.get(j).x)*(circles.get(i).x - circles.get(j).x) + (circles.get(i).y- circles.get(j).y)*(circles.get(i).x - circles.get(j).y));
-                            if (rast <= circles.get(i).rad + circles.get(j).rad) {
-                                float temp = circles.get(i).dx;
-                                circles.get(i).dx = circles.get(j).dx;
-                                circles.get(j).dx = temp;
-                                temp = circles.get(i).dy;
-                                circles.get(i).dy = circles.get(j).dy;
-                                circles.get(j).dy = temp;
-                            }
-                        }
 
-                        if (rect.inRect(circles.get(i).x, circles.get(i).y, circles.get(i).rad)) {
-                            circles.get(i).dx *= -1;
-                            circles.get(i).dy *= -1;
-
-                            for (int j = 0; j < colors.size(); j++) {
-                                if (circles.get(i).color == colors.get(j)) {
-                                    if (j == colors.size() - 1) {
-                                        circles.get(i).color = colors.get(0);
-                                    }
-                                    else {
-                                        circles.get(i).color = colors.get(j + 1);
-                                    }
+                        for (int i = 0; i < circles.size(); i++) {
+                            circles.get(i).changeDirection(width, height);
+                            for (int j = i; j < circles.size(); j++) {
+                                float rast = (float) Math.sqrt((circles.get(i).x - circles.get(j).x) * (circles.get(i).x - circles.get(j).x) + (circles.get(i).y - circles.get(j).y) * (circles.get(i).x - circles.get(j).y));
+                                if (rast <= circles.get(i).rad + circles.get(j).rad) {
+                                    float temp = circles.get(i).dx;
+                                    circles.get(i).dx = circles.get(j).dx;
+                                    circles.get(j).dx = temp;
+                                    temp = circles.get(i).dy;
+                                    circles.get(i).dy = circles.get(j).dy;
+                                    circles.get(j).dy = temp;
                                 }
                             }
 
+                            if (rect.inRect(circles.get(i).x, circles.get(i).y, circles.get(i).rad)) {
+                                circles.get(i).dx *= -1;
+                                circles.get(i).dy *= -1;
 
+                                for (int j = 0; j < colors_number; j++) {
 
+                                    if (circles.get(i).color == colors.get(j)) {
+                                        Log.i("colors1", circles.get(i).color + " " + i);
+                                        Log.i("colors", colors.get(j) + " " + j);
+                                        if (j == colors_number - 1) {
+                                            circles.get(i).color = colors.get(0);
+                                            Log.i("color", "true");
+                                        } else {
+                                            circles.get(i).color = colors.get(j + 1);
+                                            Log.i("color", "false");
+                                        }
+                                        break;
+                                    }
+                                }
+
+                            }
                         }
-                    }
+
                 }
+            }
+            if (over) {
+                gameover();
             }
         }
     }
 
 
+    public void gameover() {
+        Canvas c = holder.lockCanvas();
+        Paint p = new Paint();
+        p.setColor(Color.WHITE);
+        p.setTextSize(100);
+        try {
+            sleep(500);
+        } catch (InterruptedException e) {}
+
+        c.drawColor(backColor);
+
+        c.drawText("Вы выиграли!", width/5, height/2, p);
+
+        holder.unlockCanvasAndPost(c);
+    }
 
     public TestSurfaceView(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -140,7 +178,7 @@ public class TestSurfaceView extends SurfaceView implements SurfaceHolder.Callba
         for (int i = 0; i < number; i++) {
            float x = r.nextInt(width);
            float y = r.nextInt(height);
-           color = colors.get(r.nextInt(colors.size()));
+           color = colors.get(r.nextInt(colors_number));
            Circle temp = new Circle(x, y, color, rad, i);
            circles.add(temp);
         }

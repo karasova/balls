@@ -29,7 +29,7 @@ public class Rect {
 
     public boolean inRect(float point_x, float point_y, float rad) {
         float d = (float)Math.sqrt((point_x - this.rw) * (point_x - this.rw) + (point_y - this.rh) * (point_y - this.rh));
-        float R = (float) (120 * Math.sqrt(2) / 2);
+        float R = (float) (Math.sqrt(100*100 + 70*70) / 2);
         if (d <= R + rad) {
             return true;
         }

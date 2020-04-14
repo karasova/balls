@@ -7,6 +7,7 @@ public class Circle {
 
     float x, y, rad, dx = 20, dy = 20;
     int n, color;
+    Paint p = new Paint();
 
     public Circle(float x, float y, int color, float rad, int n) {
         this.x = x;
@@ -17,7 +18,7 @@ public class Circle {
     }
 
     public void draw(Canvas canvas) {
-        Paint p = new Paint();
+
         p.setColor(color);
         canvas.drawCircle(x, y, rad, p);
     }
